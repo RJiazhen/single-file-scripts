@@ -9,3 +9,10 @@
 ### `scheduled-shutdown.bat`
 
 windows 系统中设置定时关机
+
+### `webpToJpg.py`
+
+将 zip 压缩包内所有 webp 图片转换为 jpg 格式图片
+
+运行环境：`Python 3.11`
+相关依赖：`send2trash`、`pillow`
