@@ -16,3 +16,10 @@ windows 系统中设置定时关机
 
 运行环境：`Python 3.11`
 相关依赖：`send2trash`、`pillow`
+
+### `rime_dict_add.rs`
+
+Rime 词库追加工具。将「文字+制表符+编码」格式的输入追加到词库文件末尾。
+
+运行：`cargo run --bin rime-dict-add` 或 `./target/release/rime-dict-add`
+首次运行会提示输入词库路径，配置保存在脚本同目录的 `.rime_dict_config` 中。

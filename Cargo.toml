@@ -1,0 +1,8 @@
+[package]
+name = "single-file-scripts"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "rime-dict-add"
+path = "src/rime_dict_add.rs"

@@ -1,0 +1,9 @@
+# Rust
+target/
+*.pdb
+
+# 用户本地配置
+.rime_dict_config
+
+# 编译产物
+src/rime_dict_add
