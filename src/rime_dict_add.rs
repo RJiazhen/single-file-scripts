@@ -4,6 +4,7 @@
 use std::fs;
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::PathBuf;
+use std::process::Command;
 
 const RESET: &str = "\x1b[0m";
 const BOLD: &str = "\x1b[1m";
@@ -88,6 +89,30 @@ fn is_valid_entry(line: &str) -> bool {
 fn is_data_line(line: &str) -> bool {
     let trimmed = line.trim();
     !trimmed.is_empty() && !trimmed.starts_with('#')
+}
+
+fn trigger_rime_deploy() {
+    #[cfg(target_os = "macos")]
+    {
+        let squirrel =
+            "/Library/Input Methods/Squirrel.app/Contents/MacOS/Squirrel";
+        if std::path::Path::new(squirrel).exists() {
+            let _ = Command::new(squirrel).arg("--reload").output();
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        for path in [
+            r"C:\Program Files (x86)\Rime\WeaselServer.exe",
+            r"C:\Program Files\Rime\WeaselServer.exe",
+        ] {
+            if std::path::Path::new(path).exists() {
+                let _ = Command::new(path).arg("/deploy").output();
+                break;
+            }
+        }
+    }
 }
 
 fn insert_to_dict(dict_path: &PathBuf, new_line: &str) -> io::Result<()> {
@@ -196,6 +221,7 @@ fn main() {
                     if let Err(e) = insert_to_dict(&dict_path, line) {
                         eprintln!("{}{}写入失败{}: {}", RED, BOLD, RESET, e);
                     } else {
+                        trigger_rime_deploy();
                         clear_screen();
                         println!("{}{}✓ 已插入{}: {}", GREEN, BOLD, RESET, line);
                         println!();
