@@ -50,7 +50,10 @@ fn save_config(dict_path: &str) -> io::Result<()> {
 }
 
 fn prompt_dict_path() -> Option<PathBuf> {
-    println!("{}{}未找到配置文件{}，请输入 Rime 词库文件路径：{}", YELLOW, BOLD, RESET, RESET);
+    println!(
+        "{}{}未找到配置文件{}，请输入 Rime 词库文件路径：{}",
+        YELLOW, BOLD, RESET, RESET
+    );
     let mut input = String::new();
     io::stdin().read_line(&mut input).ok()?;
     let path_str = input.trim();
@@ -103,7 +106,12 @@ fn insert_to_dict(dict_path: &PathBuf, new_line: &str) -> io::Result<()> {
     };
 
     let result = if after.is_empty() {
-        format!("{}{}{}", before, if before.is_empty() { "" } else { "\n" }, new_line)
+        format!(
+            "{}{}{}",
+            before,
+            if before.is_empty() { "" } else { "\n" },
+            new_line
+        )
     } else {
         format!("{}\n{}\n{}", before, new_line, after)
     };
@@ -134,16 +142,41 @@ fn main() {
 
     if !dict_path.exists() {
         if dict_path.parent().map(|p| p.exists()).unwrap_or(false) {
-            println!("{}{}词库文件将新建于{}: {}{}{}", YELLOW, BOLD, RESET, CYAN, dict_path.display(), RESET);
+            println!(
+                "{}{}词库文件将新建于{}: {}{}{}",
+                YELLOW,
+                BOLD,
+                RESET,
+                CYAN,
+                dict_path.display(),
+                RESET
+            );
         } else {
-            eprintln!("{}{}路径无效，父目录不存在{}: {}", RED, BOLD, RESET, dict_path.display());
+            eprintln!(
+                "{}{}路径无效，父目录不存在{}: {}",
+                RED,
+                BOLD,
+                RESET,
+                dict_path.display()
+            );
             std::process::exit(1);
         }
     }
 
     let show_prompt = || {
-        println!("{}{}词库路径{}: {}{}{}", BOLD, CYAN, RESET, DIM, dict_path.display(), RESET);
-        println!("{}{}请输入{}「文字<Tab>编码」{}格式的内容，空行退出：{}", BOLD, GREEN, RESET, YELLOW, RESET);
+        println!(
+            "{}{}词库路径{}: {}{}{}",
+            BOLD,
+            CYAN,
+            RESET,
+            DIM,
+            dict_path.display(),
+            RESET
+        );
+        println!(
+            "{}{}请输入{}「文字<Tab>编码」{}{}格式的内容，空行退出：{}",
+            BOLD, GREEN, RESET, BOLD, GREEN, RESET
+        );
     };
     show_prompt();
 
@@ -164,6 +197,8 @@ fn main() {
                         eprintln!("{}{}写入失败{}: {}", RED, BOLD, RESET, e);
                     } else {
                         clear_screen();
+                        println!("{}{}✓ 已插入{}: {}", GREEN, BOLD, RESET, line);
+                        println!();
                         show_prompt();
                     }
                 } else {
