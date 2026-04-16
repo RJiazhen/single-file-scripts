@@ -1,0 +1,115 @@
+============================================================
+Colorless 卡牌对比分析
+============================================================
+
+1st-cards.json 中此类卡牌数量: 53
+2nd-cards.json 中此类卡牌数量: 64
+
+两个文件共有卡牌数量: 18
+仅在 1st 中出现: 35
+仅在 2nd 中出现: 46
+
+--- 两个文件都有的卡牌 ---
+  Dark Shackles
+  Discovery
+  Dramatic Entrance
+  Finesse
+  Flash of Steel
+  Hand of Greed
+  Impatience
+  Jack of All Trades
+  Master of Strategy
+  Mayhem
+  Mind Blast
+  Panache
+  Panic Button
+  Purity
+  Secret Technique
+  Secret Weapon
+  The Bomb
+  Thinking Ahead
+
+--- 仅在 1st-cards.json 中的卡牌 ---
+  Apotheosis
+  Apparition
+  Bandage Up
+  Beta
+  Bite
+  Blind
+  Burn
+  Chrysalis
+  Dazed
+  Deep Breath
+  Enlightenment
+  Expunger
+  Forethought
+  Good Instincts
+  Insight
+  J.A.X.
+  Madness
+  Magnetism
+  Metamorphosis
+  Miracle
+  Omega
+  Panacea
+  Ritual Dagger
+  Sadistic Nature
+  Safety
+  Shiv
+  Slimed
+  Smite
+  Swift Strike
+  Through Violence
+  Transmutation
+  Trip
+  Violence
+  Void
+  Wound
+
+--- 仅在 2nd-cards.json 中的卡牌（含中文名） ---
+  Alchemize / 炼制药水
+  Anointed / 天选
+  Automation / 自动化
+  Beacon of Hope / 希望灯塔
+  Beat Down / 狠揍
+  Believe in You / 相信着你
+  Bolas / 流星锤
+  Calamity / 灾祸
+  Catastrophe / 横祸
+  Coordinate / 协同配合
+  Entropy / 熵
+  Equilibrium / 均衡
+  Eternal Armor / 永恒铠甲
+  Fasten / 勒紧
+  Fisticuffs / 拳斗
+  Gang Up / 群起攻之
+  Gold Axe / 金斧
+  Hidden Gem / 未掘宝石
+  Huddle Up / 抱团
+  Intercept / 拦截
+  Jackpot / 大奖
+  Knockdown / 击倒
+  Lift / 托举
+  Mimic / 拟态
+  Nostalgia / 怀旧
+  Omnislice / 万向斩
+  Prep Time / 准备时间
+  Production / 生产制造
+  Prolong / 延伸
+  Prowess / 非凡技艺
+  Rally / 集结
+  Rend / 撕碎
+  Restlessness / 心神不宁
+  Rolling Boulder / 滚石
+  Salvo / 箭雨
+  Scrawl / 潦草急就
+  Seeker Strike / 探寻打击
+  Shockwave / 震荡波
+  Splash / 飞溅
+  Stratagem / 计策
+  Tag Team / 双打组合
+  The Gambit / 孤注一掷
+  Thrumming Hatchet / 无休手斧
+  Ultimate Defend / 究极防御
+  Ultimate Strike / 究极打击
+  Volley / 连射

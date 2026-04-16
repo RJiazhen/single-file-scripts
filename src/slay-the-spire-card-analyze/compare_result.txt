@@ -1,0 +1,138 @@
+============================================================
+Ironclad/Red 卡牌对比分析
+============================================================
+
+1st-cards.json 中此类卡牌数量: 75
+2nd-cards.json 中此类卡牌数量: 87
+
+两个文件共有卡牌数量: 40
+仅在 1st 中出现: 35
+仅在 2nd 中出现: 47
+
+--- 两个文件都有的卡牌 ---
+  Anger
+  Armaments
+  Barricade
+  Bash
+  Battle Trance
+  Bloodletting
+  Bludgeon
+  Body Slam
+  Burning Pact
+  Corruption
+  Dark Embrace
+  Defend
+  Demon Form
+  Feed
+  Feel No Pain
+  Fiend Fire
+  Flame Barrier
+  Havoc
+  Headbutt
+  Hemokinesis
+  Impervious
+  Infernal Blade
+  Inflame
+  Iron Wave
+  Juggernaut
+  Offering
+  Perfected Strike
+  Pommel Strike
+  Rage
+  Rampage
+  Rupture
+  Second Wind
+  Shrug It Off
+  Strike
+  Sword Boomerang
+  Thunderclap
+  True Grit
+  Twin Strike
+  Uppercut
+  Whirlwind
+
+--- 仅在 1st-cards.json 中的卡牌 ---
+  Berserk
+  Blood for Blood
+  Brutality
+  Carnage
+  Clash
+  Cleave
+  Clothesline
+  Combust
+  Disarm
+  Double Tap
+  Dropkick
+  Dual Wield
+  Entrench
+  Evolve
+  Exhume
+  Fire Breathing
+  Flex
+  Ghostly Armor
+  Heavy Blade
+  Immolate
+  Intimidate
+  Limit Break
+  Metallicize
+  Power Through
+  Pummel
+  Reaper
+  Reckless Charge
+  Searing Blow
+  Seeing Red
+  Sentinel
+  Sever Soul
+  Shockwave
+  Spot Weakness
+  Warcry
+  Wild Strike
+
+--- 仅在 2nd-cards.json 中的卡牌（含中文名） ---
+  Aggression / 好勇斗狠
+  Ashen Strike / 灰烬打击
+  Blood Wall / 血墙
+  Brand / 烙印
+  Break / 破击
+  Breakthrough / 突破
+  Bully / 欺凌
+  Cascade / 倾泻
+  Cinder / 余烬
+  Colossus / 巨像
+  Conflagration / 焚烧
+  Crimson Mantle / 绯红披风
+  Cruelty / 残酷
+  Demonic Shield / 恶魔护盾
+  Dismantle / 拆卸
+  Dominate / 主宰
+  Drum of Battle / 战鼓
+  Evil Eye / 邪眼
+  Expect a Fight / 跃跃欲试
+  Fight Me! / 与我一战！
+  Forgotten Ritual / 被遗忘的仪式
+  Grapple / 擒拿
+  Hellraiser / 地狱狂徒
+  Howl from Beyond / 彼岸咆哮
+  Inferno / 狱火
+  Juggling / 杂耍
+  Mangle / 凌虐
+  Molten Fist / 熔融之拳
+  One-Two Punch / 连环拳
+  Pact's End / 契约终结
+  Pillage / 劫掠
+  Primal Force / 原始力量
+  Pyre / 薪火之源
+  Setup Strike / 预备打击
+  Spite / 怨恨
+  Stampede / 惊逃
+  Stoke / 添柴
+  Stomp / 踩踏
+  Stone Armor / 岩石铠甲
+  Tank / 肉盾
+  Taunt / 挑衅
+  Tear Asunder / 扯碎
+  Thrash / 痛殴
+  Tremble / 战栗
+  Unmovable / 坚定不移
+  Unrelenting / 无情猛攻
+  Vicious / 凶恶

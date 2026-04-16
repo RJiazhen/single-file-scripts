@@ -1,10 +1,12 @@
 //! Rime 词库追加工具
 //! 将「文字+制表符+编码」格式的输入插入到词库第一个非空行前（# 开头的行视作空行）
+//! Ctrl+Cmd+F8 激活并置顶终端窗口
 
 use std::fs;
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 const RESET: &str = "\x1b[0m";
 const BOLD: &str = "\x1b[1m";
@@ -89,6 +91,111 @@ fn is_valid_entry(line: &str) -> bool {
 fn is_data_line(line: &str) -> bool {
     let trimmed = line.trim();
     !trimmed.is_empty() && !trimmed.starts_with('#')
+}
+
+#[cfg(target_os = "macos")]
+fn detect_terminal_app() -> Option<String> {
+    let mut pid = std::process::id() as i32;
+    let known = [
+        ("Terminal", "Terminal"),
+        ("iTerm2", "iTerm"),
+        ("iTerm", "iTerm"),
+        ("Cursor", "Cursor"),
+        ("Code", "Visual Studio Code"),
+        ("Warp", "Warp"),
+        ("Alacritty", "Alacritty"),
+    ];
+    for _ in 0..20 {
+        let out = Command::new("ps")
+            .args(["-p", &pid.to_string(), "-o", "ppid=,comm="])
+            .output()
+            .ok()?;
+        let s = String::from_utf8_lossy(&out.stdout);
+        let line = s.lines().next()?.trim();
+        let mut iter = line.split_whitespace();
+        let ppid: i32 = iter.next()?.parse().ok()?;
+        let comm = iter.next().unwrap_or("");
+        for (proc_name, app_name) in &known {
+            if comm.contains(proc_name) {
+                return Some((*app_name).to_string());
+            }
+        }
+        pid = ppid;
+        if ppid <= 1 {
+            break;
+        }
+    }
+    Some("Terminal".to_string())
+}
+
+#[cfg(target_os = "macos")]
+fn focus_and_float_terminal() {
+    let app = detect_terminal_app().unwrap_or_else(|| "Terminal".to_string());
+    let activate = format!(r#"tell application "{}" to activate"#, app);
+    let _ = Command::new("osascript").arg("-e").arg(&activate).output();
+    std::thread::sleep(std::time::Duration::from_millis(200));
+    let float = format!(
+        r#"tell application "System Events" to tell process "{}"
+            set frontmost to true
+            try
+                set value of attribute "AXFloating" of window 1 to true
+            end try
+        end tell"#,
+        app
+    );
+    let _ = Command::new("osascript").arg("-e").arg(&float).output();
+}
+
+#[cfg(target_os = "macos")]
+fn spawn_hotkey_listener() {
+    static CTRL: AtomicBool = AtomicBool::new(false);
+    static META: AtomicBool = AtomicBool::new(false);
+    static DEBOUNCE: AtomicBool = AtomicBool::new(false);
+
+    std::thread::spawn(|| {
+        if let Err(e) = rdev::listen(move |event| {
+            match &event.event_type {
+                rdev::EventType::KeyPress(key) => {
+                    match key {
+                        rdev::Key::ControlLeft | rdev::Key::ControlRight => {
+                            CTRL.store(true, Ordering::Relaxed);
+                        }
+                        rdev::Key::MetaLeft | rdev::Key::MetaRight => {
+                            META.store(true, Ordering::Relaxed);
+                        }
+                        rdev::Key::F8 => {
+                            if CTRL.load(Ordering::Relaxed)
+                                && META.load(Ordering::Relaxed)
+                                && !DEBOUNCE.swap(true, Ordering::Relaxed)
+                            {
+                                focus_and_float_terminal();
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                rdev::EventType::KeyRelease(key) => {
+                    match key {
+                        rdev::Key::ControlLeft | rdev::Key::ControlRight => {
+                            CTRL.store(false, Ordering::Relaxed);
+                            DEBOUNCE.store(false, Ordering::Relaxed);
+                        }
+                        rdev::Key::MetaLeft | rdev::Key::MetaRight => {
+                            META.store(false, Ordering::Relaxed);
+                            DEBOUNCE.store(false, Ordering::Relaxed);
+                        }
+                        rdev::Key::F8 => {
+                            DEBOUNCE.store(false, Ordering::Relaxed);
+                        }
+                        _ => {}
+                    }
+                }
+                _ => {}
+            }
+        }) {
+            eprintln!("hotkey listener error: {:?}", e);
+        }
+    });
 }
 
 fn trigger_rime_deploy() {
@@ -202,8 +309,13 @@ fn main() {
             "{}{}请输入{}「文字<Tab>编码」{}{}格式的内容，空行退出：{}",
             BOLD, GREEN, RESET, BOLD, GREEN, RESET
         );
+        #[cfg(target_os = "macos")]
+        println!("{}{}Ctrl+Cmd+F8{} 激活并置顶终端", DIM, BOLD, RESET);
     };
     show_prompt();
+
+    #[cfg(target_os = "macos")]
+    spawn_hotkey_listener();
 
     let stdin = io::stdin();
     let mut reader = BufReader::new(stdin.lock());
