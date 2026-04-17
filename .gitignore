@@ -2,8 +2,18 @@
 target/
 *.pdb
 
-# 用户本地配置
+# 用户本地配置（任意目录）
 .rime_dict_config
 
-# 编译产物
+# 编译产物（rustc 直编等）
 src/rime_dict_add
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# 本地打包 / 分发目录
+dist/
+
+# slay-the-spire-card-analyze：脚本生成的对比报告
+src/slay-the-spire-card-analyze/compare_result*.txt
