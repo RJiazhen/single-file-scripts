@@ -6,3 +6,6 @@ edition = "2021"
 [[bin]]
 name = "rime-dict-add"
 path = "src/rime_dict_add.rs"
+
+[dependencies]
+rdev = "0.5.3"

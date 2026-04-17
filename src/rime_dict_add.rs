@@ -1,6 +1,10 @@
-//! Rime 词库追加工具
-//! 将「文字+制表符+编码」格式的输入插入到词库第一个非空行前（# 开头的行视作空行）
-//! Ctrl+Cmd+F8 激活并置顶终端窗口
+//! Rime dictionary line inserter: inserts `text<TAB>code` lines before the first data row in a dict file.
+//!
+//! - First run: reads `.rime_dict_config` next to the executable; if missing, prompts for the dict path and saves it.
+//! - Main loop: each line must be `text<TAB>code`; validated rows are inserted **before** the first data line. Empty lines,
+//!   blank-only lines, and lines starting with `#` are treated as non-data and do not define the insert position.
+//! - After a successful insert: optionally triggers Rime redeploy (Squirrel / Weasel), clears the screen, and reprints the prompt.
+//! - macOS: optional global hotkey Ctrl+Cmd+F8 to activate the host terminal and try to float the window (Accessibility permission required).
 
 use std::fs;
 use std::io::{self, BufRead, BufReader, Write};
@@ -8,6 +12,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
 
+// ANSI terminal escape codes for colors and text style
 const RESET: &str = "\x1b[0m";
 const BOLD: &str = "\x1b[1m";
 const CYAN: &str = "\x1b[36m";
@@ -16,6 +21,7 @@ const YELLOW: &str = "\x1b[33m";
 const RED: &str = "\x1b[31m";
 const DIM: &str = "\x1b[2m";
 
+/// Clears the screen and moves the cursor to the top-left.
 fn clear_screen() {
     print!("\x1b[2J\x1b[1;1H");
     let _ = io::stdout().flush();
@@ -23,6 +29,7 @@ fn clear_screen() {
 
 const CONFIG_FILENAME: &str = ".rime_dict_config";
 
+/// Directory containing the executable (used for `.rime_dict_config`).
 fn script_dir() -> Option<PathBuf> {
     std::env::current_exe()
         .ok()
@@ -30,10 +37,12 @@ fn script_dir() -> Option<PathBuf> {
         .and_then(|p| p.parent().map(|p| p.to_path_buf()))
 }
 
+/// Full path to the config file: executable dir + `.rime_dict_config`.
 fn config_path() -> Option<PathBuf> {
     script_dir().map(|d| d.join(CONFIG_FILENAME))
 }
 
+/// Reads the saved dictionary path from the config file.
 fn load_config() -> Option<PathBuf> {
     let path = config_path()?;
     if path.exists() {
@@ -46,12 +55,14 @@ fn load_config() -> Option<PathBuf> {
     None
 }
 
+/// Writes the dictionary absolute path to `.rime_dict_config`.
 fn save_config(dict_path: &str) -> io::Result<()> {
     let path = config_path()
         .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "无法确定脚本所在目录"))?;
     fs::write(&path, dict_path.trim())
 }
 
+/// First-time setup: reads one line from stdin as the dict path; canonicalizes if it exists, else joins relative paths to cwd.
 fn prompt_dict_path() -> Option<PathBuf> {
     println!(
         "{}{}未找到配置文件{}，请输入 Rime 词库文件路径：{}",
@@ -74,6 +85,7 @@ fn prompt_dict_path() -> Option<PathBuf> {
     abs
 }
 
+/// Requires at least two tab-separated columns; the code column allows ASCII alphanumerics, space, and apostrophe (e.g. pinyin).
 fn is_valid_entry(line: &str) -> bool {
     let parts: Vec<&str> = line.split('\t').collect();
     if parts.len() < 2 {
@@ -88,11 +100,13 @@ fn is_valid_entry(line: &str) -> bool {
             .all(|c| c.is_ascii_alphanumeric() || c == '\'' || c == ' ')
 }
 
+/// A non-empty line that does not start with `#` counts as a data row; insertion happens before the first such line.
 fn is_data_line(line: &str) -> bool {
     let trimmed = line.trim();
     !trimmed.is_empty() && !trimmed.starts_with('#')
 }
 
+/// Walks the process tree to find a known terminal or IDE bundle name for AppleScript `tell application`.
 #[cfg(target_os = "macos")]
 fn detect_terminal_app() -> Option<String> {
     let mut pid = std::process::id() as i32;
@@ -128,6 +142,7 @@ fn detect_terminal_app() -> Option<String> {
     Some("Terminal".to_string())
 }
 
+/// Activates the host app and tries to set the window floating (`AXFloating`; some apps ignore it).
 #[cfg(target_os = "macos")]
 fn focus_and_float_terminal() {
     let app = detect_terminal_app().unwrap_or_else(|| "Terminal".to_string());
@@ -146,6 +161,7 @@ fn focus_and_float_terminal() {
     let _ = Command::new("osascript").arg("-e").arg(&float).output();
 }
 
+/// Spawns a background thread with `rdev` global hotkey listening; requires Accessibility (or similar) or events may not arrive.
 #[cfg(target_os = "macos")]
 fn spawn_hotkey_listener() {
     static CTRL: AtomicBool = AtomicBool::new(false);
@@ -153,56 +169,52 @@ fn spawn_hotkey_listener() {
     static DEBOUNCE: AtomicBool = AtomicBool::new(false);
 
     std::thread::spawn(|| {
-        if let Err(e) = rdev::listen(move |event| {
-            match &event.event_type {
-                rdev::EventType::KeyPress(key) => {
-                    match key {
-                        rdev::Key::ControlLeft | rdev::Key::ControlRight => {
-                            CTRL.store(true, Ordering::Relaxed);
-                        }
-                        rdev::Key::MetaLeft | rdev::Key::MetaRight => {
-                            META.store(true, Ordering::Relaxed);
-                        }
-                        rdev::Key::F8 => {
-                            if CTRL.load(Ordering::Relaxed)
-                                && META.load(Ordering::Relaxed)
-                                && !DEBOUNCE.swap(true, Ordering::Relaxed)
-                            {
-                                focus_and_float_terminal();
-                            }
-                        }
-                        _ => {}
-                    }
+        if let Err(e) = rdev::listen(move |event| match &event.event_type {
+            rdev::EventType::KeyPress(key) => match key {
+                rdev::Key::ControlLeft | rdev::Key::ControlRight => {
+                    CTRL.store(true, Ordering::Relaxed);
                 }
-                rdev::EventType::KeyRelease(key) => {
-                    match key {
-                        rdev::Key::ControlLeft | rdev::Key::ControlRight => {
-                            CTRL.store(false, Ordering::Relaxed);
-                            DEBOUNCE.store(false, Ordering::Relaxed);
-                        }
-                        rdev::Key::MetaLeft | rdev::Key::MetaRight => {
-                            META.store(false, Ordering::Relaxed);
-                            DEBOUNCE.store(false, Ordering::Relaxed);
-                        }
-                        rdev::Key::F8 => {
-                            DEBOUNCE.store(false, Ordering::Relaxed);
-                        }
-                        _ => {}
+                rdev::Key::MetaLeft | rdev::Key::MetaRight => {
+                    META.store(true, Ordering::Relaxed);
+                }
+                rdev::Key::F8 => {
+                    if CTRL.load(Ordering::Relaxed)
+                        && META.load(Ordering::Relaxed)
+                        && !DEBOUNCE.swap(true, Ordering::Relaxed)
+                    {
+                        focus_and_float_terminal();
                     }
                 }
                 _ => {}
-            }
+            },
+            rdev::EventType::KeyRelease(key) => match key {
+                rdev::Key::ControlLeft | rdev::Key::ControlRight => {
+                    CTRL.store(false, Ordering::Relaxed);
+                    DEBOUNCE.store(false, Ordering::Relaxed);
+                }
+                rdev::Key::MetaLeft | rdev::Key::MetaRight => {
+                    META.store(false, Ordering::Relaxed);
+                    DEBOUNCE.store(false, Ordering::Relaxed);
+                }
+                rdev::Key::F8 => {
+                    DEBOUNCE.store(false, Ordering::Relaxed);
+                }
+                _ => {}
+            },
+            _ => {}
         }) {
             eprintln!("hotkey listener error: {:?}", e);
         }
     });
 }
 
+/// After writing the dict file, asks the IME to reload; sleeps briefly first to reduce races with the filesystem.
 fn trigger_rime_deploy() {
+    std::thread::sleep(std::time::Duration::from_millis(500));
+
     #[cfg(target_os = "macos")]
     {
-        let squirrel =
-            "/Library/Input Methods/Squirrel.app/Contents/MacOS/Squirrel";
+        let squirrel = "/Library/Input Methods/Squirrel.app/Contents/MacOS/Squirrel";
         if std::path::Path::new(squirrel).exists() {
             let _ = Command::new(squirrel).arg("--reload").output();
         }
@@ -222,6 +234,7 @@ fn trigger_rime_deploy() {
     }
 }
 
+/// Inserts one line before the first data line (`is_data_line`); if none, appends at end of file.
 fn insert_to_dict(dict_path: &PathBuf, new_line: &str) -> io::Result<()> {
     let content = if dict_path.exists() {
         fs::read_to_string(dict_path)?
@@ -252,6 +265,7 @@ fn insert_to_dict(dict_path: &PathBuf, new_line: &str) -> io::Result<()> {
 }
 
 fn main() {
+    // 1. Resolve dict path from config or interactive prompt
     let dict_path = match load_config() {
         Some(p) => p,
         None => {
@@ -295,6 +309,7 @@ fn main() {
         }
     }
 
+    // 2. Colored prompt; 3. macOS hotkey thread
     let show_prompt = || {
         println!(
             "{}{}词库路径{}: {}{}{}",
@@ -317,6 +332,7 @@ fn main() {
     #[cfg(target_os = "macos")]
     spawn_hotkey_listener();
 
+    // 4. Read stdin until EOF or empty line
     let stdin = io::stdin();
     let mut reader = BufReader::new(stdin.lock());
 
