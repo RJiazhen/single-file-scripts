@@ -17,3 +17,5 @@ dist/
 
 # slay-the-spire-card-analyze：脚本生成的对比报告
 src/slay-the-spire-card-analyze/compare_result*.txt
+
+node_modules/
